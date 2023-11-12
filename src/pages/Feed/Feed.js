@@ -174,21 +174,21 @@ class Feed extends Component {
 
   deletePostHandler = postId => {
     this.setState({ postsLoading: true });
-    fetch('URL')
-      .then(res => {
+    fetch("http://localhost:8080/feed/post/" + postId, { method: "DELETE" })
+      .then((res) => {
         if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Deleting a post failed!');
+          throw new Error("Deleting a post failed!");
         }
         return res.json();
       })
-      .then(resData => {
+      .then((resData) => {
         console.log(resData);
-        this.setState(prevState => {
-          const updatedPosts = prevState.posts.filter(p => p._id !== postId);
+        this.setState((prevState) => {
+          const updatedPosts = prevState.posts.filter((p) => p._id !== postId);
           return { posts: updatedPosts, postsLoading: false };
         });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         this.setState({ postsLoading: false });
       });
