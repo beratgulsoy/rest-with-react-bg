@@ -1,17 +1,17 @@
-import React, { Component, Fragment } from 'react';
-import { Route, Switch, Redirect, withRouter } from 'react-router-dom';
+import React, { Component, Fragment } from "react";
+import { Route, Switch, Redirect, withRouter } from "react-router-dom";
 
-import Layout from './components/Layout/Layout';
-import Backdrop from './components/Backdrop/Backdrop';
-import Toolbar from './components/Toolbar/Toolbar';
-import MainNavigation from './components/Navigation/MainNavigation/MainNavigation';
-import MobileNavigation from './components/Navigation/MobileNavigation/MobileNavigation';
-import ErrorHandler from './components/ErrorHandler/ErrorHandler';
-import FeedPage from './pages/Feed/Feed';
-import SinglePostPage from './pages/Feed/SinglePost/SinglePost';
-import LoginPage from './pages/Auth/Login';
-import SignupPage from './pages/Auth/Signup';
-import './App.css';
+import Layout from "./components/Layout/Layout";
+import Backdrop from "./components/Backdrop/Backdrop";
+import Toolbar from "./components/Toolbar/Toolbar";
+import MainNavigation from "./components/Navigation/MainNavigation/MainNavigation";
+import MobileNavigation from "./components/Navigation/MobileNavigation/MobileNavigation";
+import ErrorHandler from "./components/ErrorHandler/ErrorHandler";
+import FeedPage from "./pages/Feed/Feed";
+import SinglePostPage from "./pages/Feed/SinglePost/SinglePost";
+import LoginPage from "./pages/Auth/Login";
+import SignupPage from "./pages/Auth/Signup";
+import "./App.css";
 
 class App extends Component {
   state = {
@@ -109,30 +109,38 @@ class App extends Component {
   signupHandler = (event, authData) => {
     event.preventDefault();
     this.setState({ authLoading: true });
-    fetch("http://localhost:8080/auth/signup", {
-      method: "PUT",
+    const graphqlQuery = {
+      query: `
+      mutation {
+        createUser(userInput: {
+          email: "${authData.signupForm.email.value}",
+          name: "${authData.signupForm.name.value}",
+          password:"${authData.signupForm.password.value}" }) {
+          _id
+          email
+        }
+      }
+      `,
+    };
+    fetch("http://localhost:8080/graphql", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        email: authData.signupForm.email.value,
-        password: authData.signupForm.password.value,
-        name: authData.signupForm.name.value,
-      }),
+      body: JSON.stringify(graphqlQuery),
     })
       .then((res) => {
-        if (res.status === 422) {
+        return res.json();
+      })
+      .then((resData) => {
+        if (resData.errors && resData.errors[0].status === 422) {
           throw new Error(
             "Validation failed. Make sure the email address isn't used yet!"
           );
         }
-        if (res.status !== 200 && res.status !== 201) {
-          console.log("Error!");
-          throw new Error("Creating a user failed!");
+        if (resData.errors) {
+          throw new Error("User creation failed.");
         }
-        return res.json();
-      })
-      .then((resData) => {
         console.log(resData);
         this.setState({ isAuth: false, authLoading: false });
         this.props.history.replace("/");
