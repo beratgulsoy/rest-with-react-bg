@@ -152,6 +152,7 @@ class Feed extends Component {
     if (this.state.editPost) {
       formData.append("oldPath", this.state.editPost.imagePath);
     }
+    console.log(formData);
     fetch("http://localhost:8080/post-image", {
       method: "PUT",
       headers: {
@@ -159,7 +160,9 @@ class Feed extends Component {
       },
       body: formData,
     })
+      .then((res) => res.json())
       .then((fileResData) => {
+        console.log(fileResData);
         const imageUrl = fileResData.filePath;
         let graphqlQuery = {
           query: `
